@@ -17,6 +17,11 @@ interface BillResult {
   error?: string;
 }
 
+interface StaticBill {
+  name: string;
+  amount: number;
+}
+
 interface Config {
   providers: {
     name: string;
@@ -24,6 +29,7 @@ interface Config {
     username: string;
     password: string;
   }[];
+  staticBills?: StaticBill[];
   householdSize: number;
 }
 
@@ -438,6 +444,22 @@ async function main(config: Config) {
       results.push(result);
     }
 
+    // Process static bills
+    if (config.staticBills) {
+      for (const bill of config.staticBills) {
+        console.log(`\n📄 Processing static bill: ${bill.name}...`);
+        if (bill.amount > 0) {
+          console.log(`✅ ${bill.name}: $${bill.amount.toFixed(2)}`);
+          results.push({
+            provider: bill.name,
+            balance: bill.amount
+          });
+        } else {
+          console.log(`⚠️ ${bill.name}: Amount is 0 or invalid`);
+        }
+      }
+    }
+
     // Calculate totals
     const totalBalance = results.reduce((sum, r) => sum + r.balance, 0);
     const perPerson = totalBalance / config.householdSize;
@@ -490,6 +512,16 @@ const config: Config = {
       url: 'https://www.abcwua.org/',
       username: process.env.ABCWUA_ACCOUNT_NUMBER || 'your-account-number',
       password: process.env.ABCWUA_ZIP_CODE || 'your-zip-code'
+    }
+  ],
+  staticBills: [
+    {
+      name: 'Mortgage',
+      amount: parseFloat(process.env.MORTGAGE_AMOUNT || '0')
+    },
+    {
+      name: 'Internet',
+      amount: parseFloat(process.env.INTERNET_AMOUNT || '0')
     }
   ],
   householdSize: parseInt(process.env.HOUSEHOLD_SIZE || '3', 10),
