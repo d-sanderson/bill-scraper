@@ -7,7 +7,7 @@ import 'dotenv/config';
 
 interface BillProvider {
   name: string;
-  login: (page: Page, username: string, password: string) => Promise<void>;
+  login: (page: Page, url: string, username: string, password: string) => Promise<void>;
   getBalance: (page: Page) => Promise<number>;
 }
 
@@ -40,8 +40,8 @@ interface Config {
 const nmgProvider: BillProvider = {
   name: 'New Mexico Gas (NMG)',
 
-  async login(page: Page, username: string, password: string): Promise<void> {
-    await page.goto('https://ipn4.paymentus.com/cp/nmg');
+  async login(page: Page, url: string, username: string, password: string): Promise<void> {
+    await page.goto(url);
     await page.waitForLoadState('networkidle');
 
     // Fill in username
@@ -94,8 +94,8 @@ const nmgProvider: BillProvider = {
 const pnmProvider: BillProvider = {
   name: 'PNM (Electric)',
 
-  async login(page: Page, username: string, password: string): Promise<void> {
-    await page.goto('https://login.pnm.com/u/login');
+  async login(page: Page, url: string, username: string, password: string): Promise<void> {
+    await page.goto(url);
     await page.waitForLoadState('networkidle');
 
     console.log('  ℹ️  Filling in username...');
@@ -191,12 +191,12 @@ const pnmProvider: BillProvider = {
 const abcwuaProvider: BillProvider = {
   name: 'ABCWUA (Water)',
 
-  async login(page: Page, username: string, password: string): Promise<void> {
+  async login(page: Page, url: string, username: string, password: string): Promise<void> {
     // username = account number (10 digits)
     // password = service zip code (5 digits)
 
     console.log('  ℹ️  Navigating to ABCWUA E-BillExpress...');
-    await page.goto('https://www.e-billexpress.com/ebpp/ABCWUA/');
+    await page.goto(url);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
@@ -392,7 +392,7 @@ async function scrapeBill(
   try {
     console.log(`\n📄 Scraping ${provider.name}...`);
 
-    await provider.login(page, username, password);
+    await provider.login(page, url, username, password);
     const balance = await provider.getBalance(page);
 
     console.log(`✅ ${provider.name}: $${balance.toFixed(2)}`);
@@ -503,13 +503,13 @@ const config: Config = {
     // Add more providers as needed:
     {
       name: 'electric',
-      url: 'https://electric-company.com/login',
+      url: 'https://login.pnm.com/u/login',
       username: process.env.ELECTRIC_USERNAME || '',
       password: process.env.ELECTRIC_PASSWORD || '',
     },
     {
       name: 'water',
-      url: 'https://www.abcwua.org/',
+      url: 'https://www.e-billexpress.com/ebpp/ABCWUA/',
       username: process.env.ABCWUA_ACCOUNT_NUMBER || 'your-account-number',
       password: process.env.ABCWUA_ZIP_CODE || 'your-zip-code'
     }
