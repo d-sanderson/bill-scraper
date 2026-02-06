@@ -1,0 +1,28 @@
+{
+  "name": "bill-scraper",
+  "version": "1.0.0",
+  "description": "Automated utility bill scraper with household cost splitting",
+  "main": "bill-scraper.ts",
+  "scripts": {
+    "scrape": "tsx bill-scraper.ts",
+    "install-browsers": "playwright install chromium",
+    "save-google-session": "tsx utils/save-google-session.ts"
+  },
+  "keywords": [
+    "playwright",
+    "automation",
+    "bill-scraper"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "dotenv": "^16.3.1"
+  }
+}
