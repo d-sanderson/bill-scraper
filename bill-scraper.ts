@@ -1,5 +1,6 @@
 import { chromium, Browser, Page } from 'playwright';
 import 'dotenv/config';
+import { config, Config } from './config';
 
 // ============================================================================
 // TYPES
@@ -17,21 +18,7 @@ interface BillResult {
   error?: string;
 }
 
-interface StaticBill {
-  name: string;
-  amount: number;
-}
 
-interface Config {
-  providers: {
-    name: string;
-    url: string;
-    username: string;
-    password: string;
-  }[];
-  staticBills?: StaticBill[];
-  householdSize: number;
-}
 
 // ============================================================================
 // PROVIDER IMPLEMENTATIONS
@@ -491,40 +478,6 @@ async function main(config: Config) {
 // CLI ENTRY POINT
 // ============================================================================
 
-// Example configuration - in production, load from config file or env vars
-const config: Config = {
-  providers: [
-    {
-      name: 'nmg',
-      url: 'https://ipn4.paymentus.com/cp/nmg',
-      username: process.env.NMG_USERNAME || 'your-username',
-      password: process.env.NMG_PASSWORD || 'your-password',
-    },
-    // Add more providers as needed:
-    {
-      name: 'electric',
-      url: 'https://login.pnm.com/u/login',
-      username: process.env.ELECTRIC_USERNAME || '',
-      password: process.env.ELECTRIC_PASSWORD || '',
-    },
-    {
-      name: 'water',
-      url: 'https://www.e-billexpress.com/ebpp/ABCWUA/',
-      username: process.env.ABCWUA_ACCOUNT_NUMBER || 'your-account-number',
-      password: process.env.ABCWUA_ZIP_CODE || 'your-zip-code'
-    }
-  ],
-  staticBills: [
-    {
-      name: 'Mortgage',
-      amount: parseFloat(process.env.MORTGAGE_AMOUNT || '0')
-    },
-    {
-      name: 'Internet',
-      amount: parseFloat(process.env.INTERNET_AMOUNT || '0')
-    }
-  ],
-  householdSize: parseInt(process.env.HOUSEHOLD_SIZE || '3', 10),
-};
+
 
 main(config).catch(console.error);
