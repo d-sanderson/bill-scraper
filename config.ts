@@ -30,9 +30,9 @@ export const config: Config = {
     // Add more providers as needed:
     {
       name: 'electric',
-      url: process.env.PNM_URL || 'your-electric-url',
-      username: process.env.PNM_USERNAME || 'your-electric-username',
-      password: process.env.PNM_PASSWORD || 'your-electric-password',
+      url: process.env.ELECTRIC_URL || 'your-electric-url',
+      username: process.env.ELECTRIC_USERNAME || 'your-electric-username',
+      password: process.env.ELECTRIC_PASSWORD || 'your-electric-password',
     },
     {
       name: 'water',
