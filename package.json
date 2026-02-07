@@ -2,9 +2,9 @@
   "name": "bill-scraper",
   "version": "1.0.0",
   "description": "Automated utility bill scraper with household cost splitting",
-  "main": "bill-scraper.ts",
+  "main": "main.ts",
   "scripts": {
-    "scrape": "tsx bill-scraper.ts",
+    "scrape": "tsx main.ts",
     "install-browsers": "playwright install chromium",
     "save-google-session": "tsx utils/save-google-session.ts"
   },

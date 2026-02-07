@@ -42,8 +42,12 @@ cp .env.example .env
 Edit `.env` and add your credentials:
 
 ```env
+NMG_URL=your-actual-url
 NMG_USERNAME=your-actual-username
 NMG_PASSWORD=your-actual-password
+ELECTRIC_URL=your-actual-url
+ELECTRIC_USERNAME=your-actual-username
+ELECTRIC_PASSWORD=your-actual-password
 HOUSEHOLD_SIZE=3
 ```
 
@@ -87,15 +91,15 @@ To add a new utility provider, follow these steps:
 
 ### 1. Create a Provider Implementation
 
-In `bill-scraper.ts`, add a new provider object:
+In `main.ts`, add a new provider object:
 
 ```typescript
 const yourProvider: BillProvider = {
   name: 'Your Utility Company',
   
-  async login(page: Page, username: string, password: string): Promise<void> {
+  async login(page: Page, url: string, username: string, password: string): Promise<void> {
     // Navigate to login page
-    await page.goto('https://your-utility.com/login');
+    await page.goto(url);
     
     // Fill in credentials
     await page.fill('input[name="username"]', username);
@@ -136,20 +140,20 @@ const PROVIDERS: Record<string, BillProvider> = {
 
 ### 3. Add to Configuration
 
-Add provider configuration:
+Add provider configuration in `config.ts`:
 
 ```typescript
-const config: Config = {
+export const config: Config = {
   providers: [
     {
       name: 'nmg',
-      url: 'https://ipn4.paymentus.com/cp/nmg',
+      url: process.env.NMG_URL,
       username: process.env.NMG_USERNAME || '',
       password: process.env.NMG_PASSWORD || '',
     },
     {
       name: 'your-provider',
-      url: 'https://your-utility.com/login',
+      url: process.env.YOUR_PROVIDER_URL,
       username: process.env.YOUR_PROVIDER_USERNAME || '',
       password: process.env.YOUR_PROVIDER_PASSWORD || '',
     },
@@ -163,6 +167,7 @@ const config: Config = {
 Update `.env`:
 
 ```env
+YOUR_PROVIDER_URL=https://your-utility.com/login
 YOUR_PROVIDER_USERNAME=username
 YOUR_PROVIDER_PASSWORD=password
 ```
@@ -180,7 +185,7 @@ The code is organized into several key components:
 
 To see the browser while scraping (helpful for debugging):
 
-In `bill-scraper.ts`, change:
+In `main.ts`, change:
 
 ```typescript
 const browser = await chromium.launch({
