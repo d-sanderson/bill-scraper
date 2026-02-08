@@ -27,7 +27,11 @@ const nmgProvider: BillProvider = {
   async login(page: Page, url: string, username: string, password: string): Promise<void> {
     await page.goto(url);
     await page.waitForLoadState('networkidle');
-
+    // wait for loginId input to be visible
+    await page.waitForSelector('input[name="loginId"]', { state: 'visible', timeout: 10000 });
+    // log if loginIn input is visible
+    const loginIdVisible = await page.isVisible('input[name="loginId"]');
+    console.log(`  ℹ️  loginId input visible: ${loginIdVisible}`);
     // Fill in username
     await page.fill('input[name="loginId"]', username);
 

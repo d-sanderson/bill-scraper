@@ -7,7 +7,7 @@ import { runScraping } from './scraper';
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = 5656;
 
 app.post('/scrape-bills', async (req, res) => {
   console.log('Received scrape request...');
@@ -45,4 +45,4 @@ app.post('/scrape-bills', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Bill scraper API running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Bill scraper API running on port ${PORT}`));
