@@ -25,15 +25,125 @@ const nmgProvider: BillProvider = {
   name: 'New Mexico Gas (NMG)',
 
   async login(page: Page, url: string, username: string, password: string): Promise<void> {
-    await page.goto(url);
-    await page.waitForLoadState('networkidle');
-    // wait for loginId input to be visible
-    await page.waitForSelector('input[name="loginId"]', { state: 'visible', timeout: 10000 });
-    // log if loginIn input is visible
-    const loginIdVisible = await page.isVisible('input[name="loginId"]');
-    console.log(`  ℹ️  loginId input visible: ${loginIdVisible}`);
+    // Robust selectors: ID is most reliable, followed by name and placeholder
+    const loginInputSelector = '#id_loginId, input[name="loginId"], input[placeholder="someone@example.com"]';
+    const maxRetries = 3;
+
+    for (let i = 0; i < maxRetries; i++) {
+      if (i > 0) {
+        console.log(`  🔄 Retry attempt ${i + 1}/${maxRetries} for NMG login...`);
+      }
+
+      try {
+        await page.goto(url);
+
+        // Sometimes networkidle never happens if there's a long polling request
+        try {
+          await page.waitForLoadState('domcontentloaded');
+          await page.waitForLoadState('networkidle', { timeout: 10000 });
+        } catch (e) {
+          console.log('  ⚠️  Network idle timeout, continuing anyway...');
+        }
+
+        console.log(`  ℹ️  Current URL: ${page.url()}`);
+        console.log('  ℹ️  Waiting for login input...');
+
+        // DEBUG: Check for frames
+        const frames = page.frames();
+        console.log(`  ℹ️  Page has ${frames.length} frames`);
+        if (frames.length > 1) {
+          frames.forEach((f, idx) => console.log(`    Frame ${idx}: ${f.url()}`));
+        }
+
+        // Try to find selector in main page OR any frame
+        let found = false;
+        try {
+          await page.waitForSelector(loginInputSelector, { state: 'visible', timeout: 30000 });
+          found = true;
+        } catch (e) {
+          console.log('  ⚠️  Not found in main frame, checking child frames...');
+          for (const frame of frames) {
+            try {
+              if (await frame.$(loginInputSelector)) {
+                console.log(`  ✅ Found in frame: ${frame.url()}`);
+                // We need to work with this frame now
+                // NOTE: This simple login flow might need refactoring if it's in a frame,
+                // but for now let's just see if we can find it.
+                await frame.waitForSelector(loginInputSelector, { state: 'visible', timeout: 5000 });
+
+                // If we are here, we found it in a frame!
+                // We will just let the flow continue, but we really should fill it *in the frame*
+                // For this specific debugging step, let's just switch to filling in the frame if found
+                console.log(`  ℹ️  Login input visible in frame: ${frame.url()}`);
+                await frame.fill(loginInputSelector, username);
+                await frame.fill('input[name="password"]', password);
+
+                // Try to find the button in the frame too
+                const btnSelector = 'button[type="submit"], input[type="submit"]';
+                if (await frame.$(btnSelector)) {
+                  await frame.click(btnSelector);
+                  found = true;
+                  break; // Break the frame loop and the retry loop (via 'found' check below)
+                }
+              }
+            } catch (err) {
+              // Ignore frame failures
+            }
+          }
+        }
+
+        if (found) {
+          // If found in a frame (and filled/clicked there), we are good.
+          // If found in main page (from first try block), we proceed to standard logic below.
+          // But wait! standard logic below attempts to fill `page` which is main frame.
+          // If we handled it in the frame loop, we should probably return or break completely.
+          // Let's restructure slightly to be cleaner.
+
+          // Check visibility in main page again to decide if we run standard logic
+          if (await page.$(loginInputSelector)) {
+            // Standard logic will run after the loop
+          } else {
+            // It was in a frame and we already handled it?
+            // Or we just failed.
+            // Let's rely on standard logic but if it fails, we catch it.
+            // actually, if we found and acted in a frame, we should break the outer retry loop.
+            break;
+          }
+        }
+
+        // If still not found, try the standard wait again which will throw and trigger retry/HTML dump
+        await page.waitForSelector(loginInputSelector, { state: 'visible', timeout: 10000 });
+
+        // If we get here, we found the input in main frame, so break the retry loop
+        break;
+      } catch (e) {
+        console.log(`  ❌ Attempt ${i + 1} failed: ${e instanceof Error ? e.message : String(e)}`);
+
+        // DUMP HTML on failure
+        try {
+          const content = await page.content();
+          console.log(`  📄 Page Content Dump (first 500 chars): ${content.substring(0, 500)}...`);
+          console.log(`  📄 Page Title: ${await page.title()}`);
+        } catch (dumpErr) {
+          console.log('  ❌ Failed to dump debug info');
+        }
+
+        if (i === maxRetries - 1) {
+          throw new Error(`Failed to load NMG login page after ${maxRetries} attempts: ${e instanceof Error ? e.message : String(e)}`);
+        }
+
+        // Wait a bit before retrying
+        console.log('  ⏳ Waiting 5 seconds before retrying...');
+        await page.waitForTimeout(5000);
+      }
+    }
+
+    // log if login input is visible
+    const loginIdVisible = await page.isVisible(loginInputSelector);
+    console.log(`  ℹ️  Login input visible: ${loginIdVisible}`);
+
     // Fill in username
-    await page.fill('input[name="loginId"]', username);
+    await page.fill(loginInputSelector, username);
 
     // Fill in password
     await page.fill('input[name="password"]', password);
@@ -42,7 +152,11 @@ const nmgProvider: BillProvider = {
     await page.click('button[type="submit"], input[type="submit"]');
 
     // Wait for navigation after login
-    await page.waitForLoadState('networkidle');
+    try {
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+    } catch (e) {
+      console.log('  ⚠️  Post-login network idle timeout, continuing...');
+    }
   },
 
   async getBalance(page: Page): Promise<number> {

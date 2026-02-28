@@ -1,5 +1,6 @@
 import express from 'express';
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 import 'dotenv/config';
 import { config } from './config';
 import { runScraping } from './scraper';
@@ -8,6 +9,9 @@ const app = express();
 app.use(express.json());
 
 const PORT = 5656;
+
+// Enable stealth plugin
+chromium.use(stealthPlugin());
 
 app.post('/scrape-bills', async (req, res) => {
   console.log('Received scrape request...');

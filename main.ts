@@ -12,8 +12,9 @@ async function main() {
     headless: false, // Set to true for production
     args: [
       '--disable-blink-features=AutomationControlled',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--disable-web-security',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--window-size=1920,1080',
     ],
   });
 
