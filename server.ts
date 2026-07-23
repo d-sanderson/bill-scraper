@@ -30,7 +30,7 @@ app.post('/scrape-bills', async (req, res) => {
 
     // Calculate summaries
     const total = results.reduce((sum, r) => sum + r.balance, 0);
-    const perPerson = total / config.householdSize;
+    const perPerson = Math.round((total / config.householdSize) * 100) / 100;
 
     res.json({
       success: true,
