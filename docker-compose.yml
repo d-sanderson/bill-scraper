@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  bill-scraper:
+    build: .
+    ports:
+      - "5656:5656"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
