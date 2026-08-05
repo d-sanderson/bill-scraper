@@ -222,7 +222,7 @@ const abcwuaProvider: BillProvider = {
     await page.waitForTimeout(2000);
 
     console.log('  ℹ️  Filling in account number...');
-    const accountField = page.locator('input[name="AccountNumber"]');
+    const accountField = page.locator('input[name="payments[0].header.accountNumber"]');
     const accountVisible = await accountField.isVisible();
     console.log(`  ℹ️  Account field visible: ${accountVisible}`);
 
@@ -234,7 +234,7 @@ const abcwuaProvider: BillProvider = {
     console.log(`  ✅ Account number entered: ${username}`);
 
     console.log('  ℹ️  Filling in service zip code...');
-    const zipField = page.locator('input[name="PIN"]');
+    const zipField = page.locator('input[name="payments[0].header.authToken1"]');
     const zipVisible = await zipField.isVisible();
     console.log(`  ℹ️  ZIP field visible: ${zipVisible}`);
 
@@ -246,7 +246,8 @@ const abcwuaProvider: BillProvider = {
     console.log(`  ✅ Zip code entered: ${password}`);
 
     console.log('  ℹ️  Looking for "One-Time Payment" button...');
-    const submitButton = page.locator('button#pay-now-button');
+
+    const submitButton = page.locator('input[name="continueButton"]');
     const buttonVisible = await submitButton.isVisible();
     console.log(`  ℹ️  Submit button visible: ${buttonVisible}`);
 
@@ -287,8 +288,9 @@ const abcwuaProvider: BillProvider = {
 
     // Specific selector for ABCWUA E-BillExpress amount input
     // <input name="PaymentAmount" value="95.28" ...>
-    const invoiceInput = page.locator('input[name="PaymentAmount"]');
+    const invoiceInput = page.locator('input[name="activePayments[0].header.paymentAmount"]')
 
+    // <td class="amountDueCol " data - th="Amount Due" > $80.39 </td>
     console.log('  ℹ️  Waiting for invoice input to be visible...');
     await invoiceInput.waitFor({ state: 'visible', timeout: 10000 });
 
@@ -299,6 +301,7 @@ const abcwuaProvider: BillProvider = {
     if (!value) {
       throw new Error('Invoice input found but has no value');
     }
+
 
     // Extract number from text like "95.28"
     const cleanText = value.trim().replace(/\s+/g, '').replace(/,/g, '');
